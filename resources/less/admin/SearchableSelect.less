@@ -1,0 +1,90 @@
+.SearchableSelect {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+
+  &-input {
+    width: 100%;
+    padding-right: 40px !important;
+    cursor: pointer;
+
+    &:focus {
+      cursor: text;
+    }
+  }
+
+  &-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: auto;
+    cursor: pointer;
+    color: @muted-color;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+
+    &:hover {
+      color: @primary-color;
+      background: fade(@primary-color, 8%);
+    }
+
+    i {
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+  }
+
+  &.is-open &-icon i {
+    transform: rotate(180deg);
+  }
+
+  &-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    background: @body-bg;
+    border: 1px solid fade(@muted-color, 30%);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    z-index: 9999;
+  }
+
+  &-option {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: @text-color;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+
+    &:hover,
+    &.selected {
+      background: fade(@primary-color, 8%);
+      border-left-color: fade(@primary-color, 30%);
+    }
+
+    &.active {
+      background: fade(@primary-color, 12%);
+      color: @primary-color;
+      font-weight: 500;
+      border-left-color: @primary-color;
+    }
+  }
+
+  &-empty {
+    padding: 20px 16px;
+    text-align: center;
+    color: @muted-color;
+    font-size: 14px;
+    font-style: italic;
+  }
+}

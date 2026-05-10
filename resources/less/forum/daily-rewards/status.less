@@ -1,0 +1,85 @@
+.DailyRewardsStatusCard {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--control-bg);
+  background: var(--body-bg);
+}
+
+.DailyRewardsStatusCard-dayProgress {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.DailyRewardsStatusCard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.DailyRewardsStatusCard-loading {
+  padding: 10px 0;
+}
+
+.DailyRewardsStatusCard-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.DailyRewardsStatusCard-label {
+  color: var(--text-color);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.DailyRewardsStatusCard-track {
+  position: relative;
+  height: 14px;
+  border: 1px solid var(--control-bg);
+  border-radius: 999px;
+  background: var(--control-bg);
+  overflow: hidden;
+}
+
+.DailyRewardsStatusCard-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: var(--primary-color);
+  transition: width 0.2s ease;
+}
+
+.DailyRewardsStatusCard-value {
+  min-width: 54px;
+  text-align: right;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+@media (max-width: 767px) {
+  .DailyRewardsStatusCard {
+    padding: 14px;
+  }
+
+  .DailyRewardsStatusCard-dayProgress {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .DailyRewardsStatusCard-row {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+
+  .DailyRewardsStatusCard-value {
+    min-width: 46px;
+    font-size: 16px;
+  }
+}

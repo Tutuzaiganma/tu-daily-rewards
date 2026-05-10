@@ -1,0 +1,163 @@
+.DailyRewardsSettingsPage {
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  &-shell {
+    border: 1px solid var(--control-bg);
+    border-radius: 12px;
+    background: var(--body-bg);
+    padding: 16px;
+    width: 100%;
+    margin: 40px auto;
+  }
+
+  &-layout {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  &-sidebar {
+    width: 240px;
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &-sidebarItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+    border: 1px solid var(--control-bg);
+    background: var(--body-bg);
+    width: 100%;
+    text-align: left;
+  }
+
+  &-sidebarItem.active {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  &-sidebarItem.active .icon {
+    color: var(--primary-color);
+  }
+
+  &-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &-mainCard {
+    border: 1px solid var(--control-bg);
+    border-radius: 10px;
+    background: var(--body-bg);
+    padding: 16px;
+  }
+
+  &-cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--heading-color);
+  }
+
+  &-rewardTabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  &-rewardTab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--control-bg);
+    background: var(--body-bg);
+  }
+
+  &-rewardTab.active {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    font-weight: 600;
+  }
+
+  &-rewardPanel .Form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  &-replyMinCharsGroup .FormControl {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  &-shellActions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+    margin-bottom: 0;
+  }
+
+  &-shellActions .Button {
+    margin-bottom: 0;
+  }
+
+  .helpText {
+    margin-bottom: 8px;
+  }
+
+  .Switch {
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 768px) {
+    &-shell {
+      padding: 12px;
+      margin: 24px auto;
+    }
+
+    &-layout {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    &-sidebar {
+      width: 100%;
+      position: static;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    &-sidebarItem {
+      flex: 1 1 calc(50% - 4px);
+      justify-content: center;
+    }
+
+    &-rewardTab {
+      flex: 1 1 calc(50% - 4px);
+      justify-content: center;
+    }
+
+    &-main,
+    &-mainCard {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &-sidebarItem,
+    &-rewardTab {
+      flex-basis: 100%;
+    }
+  }
+}

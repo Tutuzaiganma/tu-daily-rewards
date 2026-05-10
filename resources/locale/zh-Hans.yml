@@ -1,0 +1,75 @@
+tu-daily-rewards:
+  admin:
+    extension_name: 每日奖励
+    extension_description: 为用户的发帖、回帖和浏览行为提供可配置的每日奖励。
+    tabs:
+      global: 全局配置
+      rewards: 奖励配置
+    reward_tabs:
+      post: 发帖
+      reply: 回帖
+      view: 查看帖子
+    fields:
+      global_switch_label: 总开关
+      global_switch_help: 用于全局启用或关闭每日奖励功能。
+      timezone_label: 时区配置
+      timezone_help: 用于计算每日奖励的自然日边界。
+      timezone_placeholder: 选择或搜索时区...
+      timezone_no_result: 未找到匹配的时区
+      save_hint: 设置修改后请点击页面底部保存按钮。
+      reward_switch_label: "{reward}奖励开关"
+      reward_switch_help: 用于启用或关闭该类型奖励。
+      reward_amount_label: "{reward}奖励数量"
+      reward_amount_placeholder: 请输入奖励数量
+      reward_amount_help:
+        post: 用户发布主题后可获得的奖励数量。
+        reply: 用户发布回复后可获得的奖励数量。
+        view: 用户查看帖子后可获得的奖励数量。
+      reply_min_chars_label: 回帖最低字数
+      reply_min_chars_help: 仅当回复内容达到该字数时，才发放回帖奖励。留空或填写 0 表示不限制。
+      reply_min_chars_placeholder: 请输入最低字数
+      reward_limit_label: "{reward}奖励上限"
+      reward_limit_help: 开启后将限制单个用户在统计周期内可获得的最大奖励。
+      reward_limit_placeholder: 请输入奖励上限
+    validation:
+      global_switch_requires_timezone: 需要先完成时区配置，才能开启总开关。
+      reward_switch_requires_amount: "需要先填写{reward}奖励数量，才能开启该开关。"
+    switch:
+      enabled: 已开启
+      disabled: 已关闭
+  forum:
+    nav:
+      daily_rewards: 每日奖励
+    page:
+      title: 每日奖励
+      filter_toggle_accessible_label: 更改类别
+      filter_all: 全部
+      filter_post: 发帖奖励
+      filter_reply: 回帖奖励
+      filter_view: 浏览奖励
+      type_post: 发帖
+      type_reply: 回帖
+      type_view: 浏览
+      refresh: 刷新
+      claim_all: 一键领取
+      load_error: 奖励记录加载失败，请稍后重试。
+      empty_records: 暂无奖励记录
+      status_card_day_passed: 今日已过
+      status_pending: 待领取
+      status_claimed: 已领取
+      status_expired: 已过期
+      field_type: 类别
+      field_issued_at: 发放时间
+      field_claimed_at: 领取时间
+      field_status: 状态
+      field_amount: 金额
+      button_claim: 领取
+      button_claimed: 已领取
+      button_expired: 已过期
+      claim_modal_title: 奖励领取
+      claim_modal_total_label: 总计领取
+      claim_modal_confirm_button: 收下啦！
+      claim_modal_currency_placeholder: 货币名称
+      unknown_type: 未知类别
+    notifications:
+      pending_reward_text: 你有新的活跃奖励待领取！

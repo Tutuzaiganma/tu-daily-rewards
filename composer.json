@@ -1,0 +1,41 @@
+{
+    "name": "tu/daily-rewards",
+    "description": "Provides configurable daily rewards for creating discussions, posting replies, and viewing discussions.",
+    "type": "flarum-extension",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "tu",
+            "email": "hzhwb040719@163.com"
+        }
+    ],
+    "require": {
+        "flarum/core": "^1.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tu\\DailyRewards\\": "src/"
+        }
+    },
+    "extra": {
+        "flarum-extension": {
+            "title": "Daily Rewards",
+            "icon": {
+                "name": "fas fa-check-square",
+                "color": "#fff",
+                "backgroundColor": "#007bff"
+            }
+        },
+        "flarum-cli": {
+            "modules": {
+                "admin": true,
+                "forum": true,
+                "js": true,
+                "css": true,
+                "locale": true,
+                "git-hooks": true,
+                "github-actions": true
+            }
+        }
+    }
+}

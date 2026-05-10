@@ -1,0 +1,75 @@
+tu-daily-rewards:
+  admin:
+    extension_name: Daily Rewards
+    extension_description: Provides configurable daily rewards for creating discussions, posting replies, and viewing discussions.
+    tabs:
+      global: Global Settings
+      rewards: Reward Settings
+    reward_tabs:
+      post: New Discussion
+      reply: Reply
+      view: View Discussion
+    fields:
+      global_switch_label: Global Switch
+      global_switch_help: Enable or disable the daily rewards feature globally.
+      timezone_label: Timezone
+      timezone_help: Used to calculate daily reward reset boundaries.
+      timezone_placeholder: Select or search timezone...
+      timezone_no_result: No matching timezone found.
+      save_hint: Click the save button at the bottom after updating settings.
+      reward_switch_label: "{reward} reward switch"
+      reward_switch_help: Enable or disable this reward type.
+      reward_amount_label: "{reward} reward amount"
+      reward_amount_placeholder: Enter reward amount
+      reward_amount_help:
+        post: Reward amount granted when a user creates a discussion.
+        reply: Reward amount granted when a user posts a reply.
+        view: Reward amount granted when a user views a discussion.
+      reply_min_chars_label: Minimum reply characters
+      reply_min_chars_help: Reply rewards are granted only when the reply reaches this character count. Leave empty or set to 0 for no restriction.
+      reply_min_chars_placeholder: Enter minimum characters
+      reward_limit_label: "{reward} reward limit"
+      reward_limit_help: When enabled, this limits the maximum reward a user can earn within the counting period.
+      reward_limit_placeholder: Enter reward limit
+    validation:
+      global_switch_requires_timezone: Timezone must be configured before enabling the global switch.
+      reward_switch_requires_amount: "{reward} reward amount must be set before enabling this switch."
+    switch:
+      enabled: Enabled
+      disabled: Disabled
+  forum:
+    nav:
+      daily_rewards: Daily Rewards
+    page:
+      title: Daily Rewards
+      filter_toggle_accessible_label: Change category
+      filter_all: All
+      filter_post: Discussion Rewards
+      filter_reply: Reply Rewards
+      filter_view: View Rewards
+      type_post: Discussion
+      type_reply: Reply
+      type_view: View
+      refresh: Refresh
+      claim_all: Claim All
+      load_error: Failed to load reward records. Please try again later.
+      empty_records: No reward records yet.
+      status_card_day_passed: Day Passed
+      status_pending: Pending
+      status_claimed: Claimed
+      status_expired: Expired
+      field_type: Type
+      field_issued_at: Issued At
+      field_claimed_at: Claimed At
+      field_status: Status
+      field_amount: Amount
+      button_claim: Claim
+      button_claimed: Claimed
+      button_expired: Expired
+      claim_modal_title: Reward Claim
+      claim_modal_total_label: Total Claimed
+      claim_modal_confirm_button: Got It!
+      claim_modal_currency_placeholder: Currency
+      unknown_type: Unknown
+    notifications:
+      pending_reward_text: You have new activity rewards waiting to be claimed!
