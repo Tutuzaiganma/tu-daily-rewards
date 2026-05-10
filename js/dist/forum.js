@@ -1320,9 +1320,7 @@ flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.initializers.add('tu/dai
     component: _components_DailyRewards__WEBPACK_IMPORTED_MODULE_5__["default"]
   };
   Object(flarum_common_extend__WEBPACK_IMPORTED_MODULE_1__["extend"])(flarum_forum_components_IndexPage__WEBPACK_IMPORTED_MODULE_3___default.a.prototype, 'navItems', function (items) {
-    // const isLoggedIn = Boolean(app.session.user || app.data?.session?.userId);
-    // if (!isLoggedIn) return;
-
+    if (!flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.session.user) return;
     items.add('dailyRewards', m(flarum_common_components_LinkButton__WEBPACK_IMPORTED_MODULE_2___default.a, {
       icon: "fas fa-gift",
       href: flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.route('dailyRewards')
