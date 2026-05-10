@@ -14,7 +14,8 @@ app.initializers.add('tu/daily-rewards', () => {
   };
 
   extend(IndexPage.prototype, 'navItems', function (items) {
-    if (!app.session.user) return;
+    const isLoggedIn = Boolean(app.session.user || app.data?.session?.userId);
+    if (!isLoggedIn) return;
 
     items.add(
       'dailyRewards',
