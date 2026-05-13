@@ -9,7 +9,7 @@ import ClaimModel from './ClaimModel';
 import { fetchDailyRewardsPayload, fetchDailyRewardsMine, claimDailyRewardSingle, claimDailyRewardAll } from './service';
 
 const REWARD_TYPES = ['post', 'reply', 'view'];
-const HISTORY_PAGE_SIZE = 2;
+const HISTORY_PAGE_SIZE = 20;
 
 export default class DailyRewards extends Page {
   oninit(vnode) {

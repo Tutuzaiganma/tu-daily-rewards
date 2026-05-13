@@ -808,7 +808,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var REWARD_TYPES = ['post', 'reply', 'view'];
-var HISTORY_PAGE_SIZE = 2;
+var HISTORY_PAGE_SIZE = 20;
 var DailyRewards = /*#__PURE__*/function (_Page) {
   function DailyRewards() {
     return _Page.apply(this, arguments) || this;
