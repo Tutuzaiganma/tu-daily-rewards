@@ -280,7 +280,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(flarum_common_Component__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! flarum/common/components/LoadingIndicator */ "flarum/common/components/LoadingIndicator");
 /* harmony import */ var flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _RewardRecordCard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./RewardRecordCard */ "./src/forum/components/DailyRewards/RewardRecordCard.js");
+/* harmony import */ var flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! flarum/common/components/Button */ "flarum/common/components/Button");
+/* harmony import */ var flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _RewardRecordCard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./RewardRecordCard */ "./src/forum/components/DailyRewards/RewardRecordCard.js");
+
 
 
 
@@ -307,7 +310,7 @@ var DailyRewardsCardList = /*#__PURE__*/function (_Component) {
         className: "DailyRewardsCardList DailyRewardsCardList--state"
       }, m(flarum_common_components_LoadingIndicator__WEBPACK_IMPORTED_MODULE_3___default.a, null));
     }
-    if (props.errorMessage) {
+    if (props.errorMessage && !records.length) {
       return m("div", {
         className: "DailyRewardsCardList DailyRewardsCardList--state"
       }, m("div", {
@@ -321,10 +324,13 @@ var DailyRewardsCardList = /*#__PURE__*/function (_Component) {
         className: "DailyRewardsState"
       }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.empty_records')));
     }
+    var hasMore = Boolean(props.hasMore);
+    var loadingMore = Boolean(props.loadingMore);
+    var onLoadMore = typeof props.onLoadMore === 'function' ? props.onLoadMore : function () {};
     return m("div", {
       className: "DailyRewardsCardList"
     }, records.map(function (record, index) {
-      return m(_RewardRecordCard__WEBPACK_IMPORTED_MODULE_4__["default"], {
+      return m(_RewardRecordCard__WEBPACK_IMPORTED_MODULE_5__["default"], {
         key: (record.id || 'record') + "-" + index,
         record: record,
         expired: isExpiredRecord(record),
@@ -333,7 +339,14 @@ var DailyRewardsCardList = /*#__PURE__*/function (_Component) {
           return onClaimRecord(record, index);
         }
       });
-    }));
+    }), hasMore ? m("div", {
+      className: "DailyRewardsCardList-loadMore"
+    }, m(flarum_common_components_Button__WEBPACK_IMPORTED_MODULE_4___default.a, {
+      className: "Button DailyRewardsCardList-loadMoreButton",
+      onclick: onLoadMore,
+      disabled: loadingMore,
+      loading: loadingMore
+    }, flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_more'))) : null);
   };
   return DailyRewardsCardList;
 }(flarum_common_Component__WEBPACK_IMPORTED_MODULE_2___default.a);
@@ -795,6 +808,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var REWARD_TYPES = ['post', 'reply', 'view'];
+var HISTORY_PAGE_SIZE = 20;
 var DailyRewards = /*#__PURE__*/function (_Page) {
   function DailyRewards() {
     return _Page.apply(this, arguments) || this;
@@ -813,6 +827,10 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     this.claimingAll = false;
     this.claimingRecordKeys = {};
     this.errorMessage = '';
+    this.historyPageSize = HISTORY_PAGE_SIZE;
+    this.currentPage = 1;
+    this.hasMoreRecords = false;
+    this.loadingMore = false;
     this.loadRecords();
   };
   _proto.oncreate = function oncreate(vnode) {
@@ -876,8 +894,49 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       }
     };
   };
-  _proto.loadRecords = function loadRecords(options) {
+  _proto.normalizeMinePayload = function normalizeMinePayload(payload) {
     var _this = this;
+    var source = payload || {};
+    var rows = Array.isArray(source.data) ? source.data : [];
+    var pagination = source.pagination && typeof source.pagination === 'object' ? source.pagination : {};
+    var page = Math.max(1, Math.floor(this.toSafeNumber(pagination.page || 1)));
+    var count = Math.floor(this.toSafeNumber(pagination.count || this.historyPageSize));
+    var total = Math.floor(this.toSafeNumber(pagination.total));
+    var fallbackHasMore = count > 0 && page * count < total;
+    return {
+      records: rows.map(function (row) {
+        return _this.normalizeRecord(row);
+      }),
+      pagination: {
+        page: page,
+        count: count,
+        total: total,
+        hasMore: typeof pagination.hasMore === 'boolean' ? pagination.hasMore : fallbackHasMore
+      }
+    };
+  };
+  _proto.mergeUniqueRecords = function mergeUniqueRecords(existingRecords, incomingRecords) {
+    var result = Array.isArray(existingRecords) ? existingRecords.slice() : [];
+    var seenIds = {};
+    result.forEach(function (record) {
+      if (record && record.id) {
+        seenIds[String(record.id)] = true;
+      }
+    });
+    (Array.isArray(incomingRecords) ? incomingRecords : []).forEach(function (record) {
+      var key = record && record.id ? String(record.id) : '';
+      if (key && seenIds[key]) {
+        return;
+      }
+      if (key) {
+        seenIds[key] = true;
+      }
+      result.push(record);
+    });
+    return result;
+  };
+  _proto.loadRecords = function loadRecords(options) {
+    var _this2 = this;
     if (options === void 0) {
       options = {};
     }
@@ -887,36 +946,67 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       this.statusLoading = true;
     }
     this.errorMessage = '';
-    return Object(_service__WEBPACK_IMPORTED_MODULE_9__["fetchDailyRewardsPayload"])().then(function (_ref) {
+    return Object(_service__WEBPACK_IMPORTED_MODULE_9__["fetchDailyRewardsPayload"])({
+      page: 1,
+      count: this.historyPageSize
+    }).then(function (_ref) {
       var mineResult = _ref[0],
         statusResult = _ref[1];
       if (mineResult.status === 'fulfilled') {
-        var response = mineResult.value;
-        var rows = response && Array.isArray(response.data) ? response.data : [];
-        _this.records = rows.map(function (row) {
-          return _this.normalizeRecord(row);
-        });
+        var minePayload = _this2.normalizeMinePayload(mineResult.value);
+        _this2.records = minePayload.records;
+        _this2.currentPage = minePayload.pagination.page;
+        _this2.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
       } else if (!silent) {
-        _this.records = [];
-        _this.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
+        _this2.records = [];
+        _this2.currentPage = 1;
+        _this2.hasMoreRecords = false;
+        _this2.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
       }
       if (statusResult.status === 'fulfilled') {
-        var _response = statusResult.value;
-        _this.statusConfig = _this.normalizeStatusConfig(_response && _response.data ? _response.data : {});
-      } else if (!_this.statusConfig) {
-        _this.statusConfig = _this.getDefaultStatusConfig();
+        var response = statusResult.value;
+        _this2.statusConfig = _this2.normalizeStatusConfig(response && response.data ? response.data : {});
+      } else if (!_this2.statusConfig) {
+        _this2.statusConfig = _this2.getDefaultStatusConfig();
       }
     })["catch"](function () {
       if (!silent) {
-        _this.records = [];
+        _this2.records = [];
       }
-      _this.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
+      _this2.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
     })["finally"](function () {
-      _this.loading = false;
-      _this.statusLoading = false;
-      _this.refreshing = false;
-      _this.claimingAll = false;
-      _this.claimingRecordKeys = {};
+      _this2.loading = false;
+      _this2.statusLoading = false;
+      _this2.loadingMore = false;
+      _this2.refreshing = false;
+      _this2.claimingAll = false;
+      _this2.claimingRecordKeys = {};
+      m.redraw();
+    });
+  };
+  _proto.handleLoadMore = function handleLoadMore() {
+    var _this3 = this;
+    if (this.loading || this.loadingMore || !this.hasMoreRecords) {
+      return;
+    }
+    var nextPage = this.currentPage + 1;
+    this.errorMessage = '';
+    this.loadingMore = true;
+    m.redraw();
+    return Object(_service__WEBPACK_IMPORTED_MODULE_9__["fetchDailyRewardsMine"])({
+      page: nextPage,
+      count: this.historyPageSize
+    }).then(function (response) {
+      var minePayload = _this3.normalizeMinePayload(response);
+      _this3.records = _this3.mergeUniqueRecords(_this3.records, minePayload.records);
+      _this3.currentPage = minePayload.pagination.page || nextPage;
+      _this3.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+    })["catch"](function () {
+      if (!_this3.records.length) {
+        _this3.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
+      }
+    })["finally"](function () {
+      _this3.loadingMore = false;
       m.redraw();
     });
   };
@@ -964,7 +1054,7 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     return '';
   };
   _proto.getTodayTotalsByType = function getTodayTotalsByType(timezone) {
-    var _this2 = this;
+    var _this4 = this;
     var totals = {
       post: 0,
       reply: 0,
@@ -981,11 +1071,11 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       if (!REWARD_TYPES.includes(record.type)) {
         return;
       }
-      var recordDateKey = _this2.getRecordDateKey(record.createdAt);
+      var recordDateKey = _this4.getRecordDateKey(record.createdAt);
       if (recordDateKey !== todayKey) {
         return;
       }
-      totals[record.type] += _this2.toSafeNumber(record.amount);
+      totals[record.type] += _this4.toSafeNumber(record.amount);
     });
     return totals;
   };
@@ -1007,16 +1097,16 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     return recordDateKey < todayKey;
   };
   _proto.getStatusSummary = function getStatusSummary() {
-    var _this3 = this;
+    var _this5 = this;
     var config = this.statusConfig || this.getDefaultStatusConfig();
     var timezone = typeof config.global.timezone === 'string' ? config.global.timezone.trim() : '';
     var totalsByType = this.getTodayTotalsByType(timezone);
     var rowsByType = {};
     REWARD_TYPES.forEach(function (type) {
-      var rewardConfig = config.rewards[type] || _this3.normalizeRewardConfig({});
-      var current = _this3.toSafeNumber(totalsByType[type]);
+      var rewardConfig = config.rewards[type] || _this5.normalizeRewardConfig({});
+      var current = _this5.toSafeNumber(totalsByType[type]);
       var isEffective = Boolean(config.global.effectiveEnabled && rewardConfig.effectiveEnabled);
-      var target = isEffective && rewardConfig.limitEnabled ? _this3.toSafeNumber(rewardConfig.limitAmount) : 0;
+      var target = isEffective && rewardConfig.limitEnabled ? _this5.toSafeNumber(rewardConfig.limitAmount) : 0;
       var percent = target > 0 ? Math.max(0, Math.min(100, current / target * 100)) : 0;
       rowsByType[type] = {
         current: current,
@@ -1058,14 +1148,14 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     });
   };
   _proto.handleClaimAll = function handleClaimAll() {
-    var _this4 = this;
+    var _this6 = this;
     if (this.claimingAll) {
       return;
     }
     var global = this.statusConfig && this.statusConfig.global ? this.statusConfig.global : {};
     var timezone = typeof global.timezone === 'string' ? global.timezone.trim() : '';
     var pendingCount = this.records.filter(function (record) {
-      return !record.claimedAt && !_this4.isRecordExpired(record, timezone);
+      return !record.claimedAt && !_this6.isRecordExpired(record, timezone);
     }).length;
     if (!pendingCount) {
       return;
@@ -1073,16 +1163,16 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     this.claimingAll = true;
     m.redraw();
     return Object(_service__WEBPACK_IMPORTED_MODULE_9__["claimDailyRewardAll"])().then(function (response) {
-      var result = _this4.normalizeClaimResponse(response);
+      var result = _this6.normalizeClaimResponse(response);
       if (!result.success) {
         return;
       }
-      _this4.showClaimModal(result.claimedTotal);
-      return _this4.loadRecords({
+      _this6.showClaimModal(result.claimedTotal);
+      return _this6.loadRecords({
         silent: true
       });
     })["catch"](function () {})["finally"](function () {
-      _this4.claimingAll = false;
+      _this6.claimingAll = false;
       m.redraw();
     });
   };
@@ -1093,7 +1183,7 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     return Boolean(this.claimingRecordKeys[this.getRecordKey(record, index)]);
   };
   _proto.handleClaimRecord = function handleClaimRecord(record, index, timezone) {
-    var _this5 = this;
+    var _this7 = this;
     if (!record || record.claimedAt || this.isRecordExpired(record, timezone) || this.claimingAll) {
       return;
     }
@@ -1104,34 +1194,34 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     this.claimingRecordKeys[key] = true;
     m.redraw();
     return Object(_service__WEBPACK_IMPORTED_MODULE_9__["claimDailyRewardSingle"])(record.id).then(function (response) {
-      var result = _this5.normalizeClaimResponse(response);
+      var result = _this7.normalizeClaimResponse(response);
       if (!result.success) {
         return;
       }
-      _this5.showClaimModal(result.claimedTotal);
-      return _this5.loadRecords({
+      _this7.showClaimModal(result.claimedTotal);
+      return _this7.loadRecords({
         silent: true
       });
     })["catch"](function () {})["finally"](function () {
-      delete _this5.claimingRecordKeys[key];
+      delete _this7.claimingRecordKeys[key];
       m.redraw();
     });
   };
   _proto.getFilteredRecords = function getFilteredRecords() {
-    var _this6 = this;
+    var _this8 = this;
     if (this.filterType === 'all') {
       return this.records;
     }
     return this.records.filter(function (record) {
-      return record.type === _this6.filterType;
+      return record.type === _this8.filterType;
     });
   };
   _proto.view = function view() {
-    var _this7 = this;
+    var _this9 = this;
     var statusSummary = this.getStatusSummary();
     var timezone = statusSummary.timezone;
     var pendingCount = this.records.filter(function (record) {
-      return !record.claimedAt && !_this7.isRecordExpired(record, timezone);
+      return !record.claimedAt && !_this9.isRecordExpired(record, timezone);
     }).length;
     var filteredRecords = this.getFilteredRecords();
     return m("div", {
@@ -1149,16 +1239,16 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     }, m(_Toolbar__WEBPACK_IMPORTED_MODULE_5__["default"], {
       filterType: this.filterType,
       onFilterChange: function onFilterChange(value) {
-        _this7.filterType = value;
+        _this9.filterType = value;
       },
       refreshing: this.refreshing,
       onRefresh: function onRefresh() {
-        return _this7.handleRefresh();
+        return _this9.handleRefresh();
       },
       pendingCount: pendingCount,
       claiming: this.claimingAll,
       onClaimAll: function onClaimAll() {
-        return _this7.handleClaimAll();
+        return _this9.handleClaimAll();
       }
     }), m(_StatusCard__WEBPACK_IMPORTED_MODULE_7__["default"], {
       loading: this.statusLoading,
@@ -1166,16 +1256,21 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       rowsByType: statusSummary.rowsByType
     }), m(_RewardCardList__WEBPACK_IMPORTED_MODULE_6__["default"], {
       loading: this.loading,
+      loadingMore: this.loadingMore,
+      hasMore: this.hasMoreRecords,
       errorMessage: this.errorMessage,
       records: filteredRecords,
       isExpiredRecord: function isExpiredRecord(record) {
-        return _this7.isRecordExpired(record, timezone);
+        return _this9.isRecordExpired(record, timezone);
       },
       isClaimingRecord: function isClaimingRecord(record, index) {
-        return _this7.isClaimingRecord(record, index);
+        return _this9.isClaimingRecord(record, index);
       },
       onClaimRecord: function onClaimRecord(record, index) {
-        return _this7.handleClaimRecord(record, index, timezone);
+        return _this9.handleClaimRecord(record, index, timezone);
+      },
+      onLoadMore: function onLoadMore() {
+        return _this9.handleLoadMore();
       }
     }))))));
   };
@@ -1214,10 +1309,36 @@ function getClaimSingleApiUrl() {
 function getClaimAllApiUrl() {
   return flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.forum.attribute('apiUrl') + "/daily-rewards/claim/all";
 }
-function fetchDailyRewardsMine() {
+function parsePositiveInt(value) {
+  var parsed = Number(value);
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return parsed;
+  }
+  return null;
+}
+function buildMineQueryString(params) {
+  if (params === void 0) {
+    params = {};
+  }
+  var query = new URLSearchParams();
+  var page = parsePositiveInt(params.page);
+  var count = parsePositiveInt(params.count);
+  if (page) {
+    query.set('page', String(page));
+  }
+  if (count) {
+    query.set('count', String(count));
+  }
+  var queryString = query.toString();
+  return queryString ? "?" + queryString : '';
+}
+function fetchDailyRewardsMine(params) {
+  if (params === void 0) {
+    params = {};
+  }
   return flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.request({
     method: 'GET',
-    url: getMineApiUrl()
+    url: "" + getMineApiUrl() + buildMineQueryString(params)
   });
 }
 function fetchDailyRewardsStatus() {
@@ -1226,8 +1347,11 @@ function fetchDailyRewardsStatus() {
     url: getStatusApiUrl()
   });
 }
-function fetchDailyRewardsPayload() {
-  return Promise.allSettled([fetchDailyRewardsMine(), fetchDailyRewardsStatus()]);
+function fetchDailyRewardsPayload(mineParams) {
+  if (mineParams === void 0) {
+    mineParams = {};
+  }
+  return Promise.allSettled([fetchDailyRewardsMine(mineParams), fetchDailyRewardsStatus()]);
 }
 function claimDailyRewardSingle(id) {
   return flarum_forum_app__WEBPACK_IMPORTED_MODULE_0___default.a.request({

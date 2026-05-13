@@ -52,6 +52,7 @@ tu-daily-rewards:
       type_view: View
       refresh: Refresh
       claim_all: Claim All
+      load_more: Load More
       load_error: Failed to load reward records. Please try again later.
       empty_records: No reward records yet.
       status_card_day_passed: Day Passed

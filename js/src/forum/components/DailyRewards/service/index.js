@@ -16,10 +16,38 @@ function getClaimAllApiUrl() {
   return `${app.forum.attribute('apiUrl')}/daily-rewards/claim/all`;
 }
 
-export function fetchDailyRewardsMine() {
+function parsePositiveInt(value) {
+  const parsed = Number(value);
+
+  if (Number.isInteger(parsed) && parsed > 0) {
+    return parsed;
+  }
+
+  return null;
+}
+
+function buildMineQueryString(params = {}) {
+  const query = new URLSearchParams();
+  const page = parsePositiveInt(params.page);
+  const count = parsePositiveInt(params.count);
+
+  if (page) {
+    query.set('page', String(page));
+  }
+
+  if (count) {
+    query.set('count', String(count));
+  }
+
+  const queryString = query.toString();
+
+  return queryString ? `?${queryString}` : '';
+}
+
+export function fetchDailyRewardsMine(params = {}) {
   return app.request({
     method: 'GET',
-    url: getMineApiUrl(),
+    url: `${getMineApiUrl()}${buildMineQueryString(params)}`,
   });
 }
 
@@ -30,8 +58,8 @@ export function fetchDailyRewardsStatus() {
   });
 }
 
-export function fetchDailyRewardsPayload() {
-  return Promise.allSettled([fetchDailyRewardsMine(), fetchDailyRewardsStatus()]);
+export function fetchDailyRewardsPayload(mineParams = {}) {
+  return Promise.allSettled([fetchDailyRewardsMine(mineParams), fetchDailyRewardsStatus()]);
 }
 
 export function claimDailyRewardSingle(id) {

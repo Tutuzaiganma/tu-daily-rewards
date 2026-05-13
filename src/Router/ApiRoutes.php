@@ -5,6 +5,8 @@ namespace Tu\DailyRewards\Router;
 use Flarum\Extend;
 use Tu\DailyRewards\ClaimReward\AllClaim;
 use Tu\DailyRewards\ClaimReward\SingleClaim;
+use Tu\DailyRewards\Info\Mine;
+use Tu\DailyRewards\Info\Status;
 
 class ApiRoutes
 {

@@ -7,8 +7,8 @@ use Flarum\Discussion\Event\UserRead;
 use Flarum\Discussion\Event\UserDataSaving;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use Tu\DailyRewards\Info\Status;
 use Tu\DailyRewards\Router\Notification;
-use Tu\DailyRewards\Router\Status;
 
 class ViewPost
 {

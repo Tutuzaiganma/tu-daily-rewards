@@ -8,8 +8,8 @@ use Flarum\Post\Event\Posted;
 use Flarum\Post\Post;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use Tu\DailyRewards\Info\Status;
 use Tu\DailyRewards\Router\Notification;
-use Tu\DailyRewards\Router\Status;
 
 class PostCreated
 {

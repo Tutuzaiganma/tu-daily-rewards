@@ -1,6 +1,7 @@
 import app from 'flarum/forum/app';
 import Component from 'flarum/common/Component';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
+import Button from 'flarum/common/components/Button';
 import RewardRecordCard from './RewardRecordCard';
 
 export default class DailyRewardsCardList extends Component {
@@ -19,7 +20,7 @@ export default class DailyRewardsCardList extends Component {
       );
     }
 
-    if (props.errorMessage) {
+    if (props.errorMessage && !records.length) {
       return (
         <div className="DailyRewardsCardList DailyRewardsCardList--state">
           <div className="DailyRewardsState DailyRewardsState--error">{props.errorMessage}</div>
@@ -37,6 +38,10 @@ export default class DailyRewardsCardList extends Component {
       );
     }
 
+    const hasMore = Boolean(props.hasMore);
+    const loadingMore = Boolean(props.loadingMore);
+    const onLoadMore = typeof props.onLoadMore === 'function' ? props.onLoadMore : () => {};
+
     return (
       <div className="DailyRewardsCardList">
         {records.map((record, index) => (
@@ -48,6 +53,19 @@ export default class DailyRewardsCardList extends Component {
             onClaim={() => onClaimRecord(record, index)}
           />
         ))}
+
+        {hasMore ? (
+          <div className="DailyRewardsCardList-loadMore">
+            <Button
+              className="Button DailyRewardsCardList-loadMoreButton"
+              onclick={onLoadMore}
+              disabled={loadingMore}
+              loading={loadingMore}
+            >
+              {app.translator.trans('tu-daily-rewards.forum.page.load_more')}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }

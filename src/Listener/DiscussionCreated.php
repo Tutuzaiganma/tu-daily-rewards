@@ -8,8 +8,8 @@ use Flarum\Discussion\Discussion;
 use Flarum\Discussion\Event\Started;
 use Flarum\User\User;
 use Illuminate\Database\ConnectionInterface;
+use Tu\DailyRewards\Info\Status;
 use Tu\DailyRewards\Router\Notification;
-use Tu\DailyRewards\Router\Status;
 
 class DiscussionCreated
 {

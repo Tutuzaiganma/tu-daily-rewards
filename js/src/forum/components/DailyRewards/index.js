@@ -6,9 +6,10 @@ import DailyRewardsToolbar from './Toolbar';
 import DailyRewardsCardList from './RewardCardList';
 import DailyRewardsStatusCard from './StatusCard';
 import ClaimModel from './ClaimModel';
-import { fetchDailyRewardsPayload, claimDailyRewardSingle, claimDailyRewardAll } from './service';
+import { fetchDailyRewardsPayload, fetchDailyRewardsMine, claimDailyRewardSingle, claimDailyRewardAll } from './service';
 
 const REWARD_TYPES = ['post', 'reply', 'view'];
+const HISTORY_PAGE_SIZE = 20;
 
 export default class DailyRewards extends Page {
   oninit(vnode) {
@@ -24,6 +25,10 @@ export default class DailyRewards extends Page {
     this.claimingAll = false;
     this.claimingRecordKeys = {};
     this.errorMessage = '';
+    this.historyPageSize = HISTORY_PAGE_SIZE;
+    this.currentPage = 1;
+    this.hasMoreRecords = false;
+    this.loadingMore = false;
 
     this.loadRecords();
   }
@@ -99,6 +104,50 @@ export default class DailyRewards extends Page {
     };
   }
 
+  normalizeMinePayload(payload) {
+    const source = payload || {};
+    const rows = Array.isArray(source.data) ? source.data : [];
+    const pagination = source.pagination && typeof source.pagination === 'object' ? source.pagination : {};
+    const page = Math.max(1, Math.floor(this.toSafeNumber(pagination.page || 1)));
+    const count = Math.floor(this.toSafeNumber(pagination.count || this.historyPageSize));
+    const total = Math.floor(this.toSafeNumber(pagination.total));
+    const fallbackHasMore = count > 0 && page * count < total;
+
+    return {
+      records: rows.map((row) => this.normalizeRecord(row)),
+      pagination: {
+        page,
+        count,
+        total,
+        hasMore: typeof pagination.hasMore === 'boolean' ? pagination.hasMore : fallbackHasMore,
+      },
+    };
+  }
+
+  mergeUniqueRecords(existingRecords, incomingRecords) {
+    const result = Array.isArray(existingRecords) ? existingRecords.slice() : [];
+    const seenIds = {};
+
+    result.forEach((record) => {
+      if (record && record.id) {
+        seenIds[String(record.id)] = true;
+      }
+    });
+
+    (Array.isArray(incomingRecords) ? incomingRecords : []).forEach((record) => {
+      const key = record && record.id ? String(record.id) : '';
+      if (key && seenIds[key]) {
+        return;
+      }
+      if (key) {
+        seenIds[key] = true;
+      }
+      result.push(record);
+    });
+
+    return result;
+  }
+
   loadRecords(options = {}) {
     const silent = Boolean(options.silent);
 
@@ -108,14 +157,17 @@ export default class DailyRewards extends Page {
     }
     this.errorMessage = '';
 
-    return fetchDailyRewardsPayload()
+    return fetchDailyRewardsPayload({ page: 1, count: this.historyPageSize })
       .then(([mineResult, statusResult]) => {
         if (mineResult.status === 'fulfilled') {
-          const response = mineResult.value;
-          const rows = response && Array.isArray(response.data) ? response.data : [];
-          this.records = rows.map((row) => this.normalizeRecord(row));
+          const minePayload = this.normalizeMinePayload(mineResult.value);
+          this.records = minePayload.records;
+          this.currentPage = minePayload.pagination.page;
+          this.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
         } else if (!silent) {
           this.records = [];
+          this.currentPage = 1;
+          this.hasMoreRecords = false;
           this.errorMessage = app.translator.trans('tu-daily-rewards.forum.page.load_error');
         }
 
@@ -135,9 +187,38 @@ export default class DailyRewards extends Page {
       .finally(() => {
         this.loading = false;
         this.statusLoading = false;
+        this.loadingMore = false;
         this.refreshing = false;
         this.claimingAll = false;
         this.claimingRecordKeys = {};
+        m.redraw();
+      });
+  }
+
+  handleLoadMore() {
+    if (this.loading || this.loadingMore || !this.hasMoreRecords) {
+      return;
+    }
+
+    const nextPage = this.currentPage + 1;
+    this.errorMessage = '';
+    this.loadingMore = true;
+    m.redraw();
+
+    return fetchDailyRewardsMine({ page: nextPage, count: this.historyPageSize })
+      .then((response) => {
+        const minePayload = this.normalizeMinePayload(response);
+        this.records = this.mergeUniqueRecords(this.records, minePayload.records);
+        this.currentPage = minePayload.pagination.page || nextPage;
+        this.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+      })
+      .catch(() => {
+        if (!this.records.length) {
+          this.errorMessage = app.translator.trans('tu-daily-rewards.forum.page.load_error');
+        }
+      })
+      .finally(() => {
+        this.loadingMore = false;
         m.redraw();
       });
   }
@@ -416,11 +497,14 @@ export default class DailyRewards extends Page {
 
                 <DailyRewardsCardList
                   loading={this.loading}
+                  loadingMore={this.loadingMore}
+                  hasMore={this.hasMoreRecords}
                   errorMessage={this.errorMessage}
                   records={filteredRecords}
                   isExpiredRecord={(record) => this.isRecordExpired(record, timezone)}
                   isClaimingRecord={(record, index) => this.isClaimingRecord(record, index)}
                   onClaimRecord={(record, index) => this.handleClaimRecord(record, index, timezone)}
+                  onLoadMore={() => this.handleLoadMore()}
                 />
               </div>
             </div>

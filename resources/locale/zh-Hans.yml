@@ -52,6 +52,7 @@ tu-daily-rewards:
       type_view: 浏览
       refresh: 刷新
       claim_all: 一键领取
+      load_more: 加载更多
       load_error: 奖励记录加载失败，请稍后重试。
       empty_records: 暂无奖励记录
       status_card_day_passed: 今日已过

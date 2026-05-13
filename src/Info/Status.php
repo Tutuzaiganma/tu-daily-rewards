@@ -1,6 +1,6 @@
 <?php
 
-namespace Tu\DailyRewards\Router;
+namespace Tu\DailyRewards\Info;
 
 use Flarum\Settings\SettingsRepositoryInterface;
 use Laminas\Diactoros\Response\JsonResponse;
