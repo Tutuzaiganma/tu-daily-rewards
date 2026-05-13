@@ -808,7 +808,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 var REWARD_TYPES = ['post', 'reply', 'view'];
-var HISTORY_PAGE_SIZE = 20;
+var HISTORY_PAGE_SIZE = 2;
 var DailyRewards = /*#__PURE__*/function (_Page) {
   function DailyRewards() {
     return _Page.apply(this, arguments) || this;
@@ -900,8 +900,8 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     var rows = Array.isArray(source.data) ? source.data : [];
     var pagination = source.pagination && typeof source.pagination === 'object' ? source.pagination : {};
     var page = Math.max(1, Math.floor(this.toSafeNumber(pagination.page || 1)));
-    var count = Math.floor(this.toSafeNumber(pagination.count || this.historyPageSize));
-    var total = Math.floor(this.toSafeNumber(pagination.total));
+    var count = Math.floor(this.toSafeNumber(pagination.count || rows.length || this.historyPageSize));
+    var total = Math.max(rows.length, Math.floor(this.toSafeNumber(pagination.total)));
     var fallbackHasMore = count > 0 && page * count < total;
     return {
       records: rows.map(function (row) {
@@ -914,6 +914,22 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
         hasMore: typeof pagination.hasMore === 'boolean' ? pagination.hasMore : fallbackHasMore
       }
     };
+  };
+  _proto.getMineRequestCount = function getMineRequestCount(options) {
+    if (options === void 0) {
+      options = {};
+    }
+    if (!options.preserveVisibleCount) {
+      return this.historyPageSize;
+    }
+    var visibleCount = Array.isArray(this.records) ? this.records.length : 0;
+    return Math.max(this.historyPageSize, visibleCount);
+  };
+  _proto.syncPaginationState = function syncPaginationState(total) {
+    var safeTotal = Math.max(0, Math.floor(this.toSafeNumber(total)));
+    var visibleCount = Array.isArray(this.records) ? this.records.length : 0;
+    this.currentPage = Math.max(1, Math.ceil(visibleCount / this.historyPageSize));
+    this.hasMoreRecords = safeTotal > visibleCount;
   };
   _proto.mergeUniqueRecords = function mergeUniqueRecords(existingRecords, incomingRecords) {
     var result = Array.isArray(existingRecords) ? existingRecords.slice() : [];
@@ -941,6 +957,7 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       options = {};
     }
     var silent = Boolean(options.silent);
+    var mineRequestCount = this.getMineRequestCount(options);
     if (!silent) {
       this.loading = true;
       this.statusLoading = true;
@@ -948,15 +965,14 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     this.errorMessage = '';
     return Object(_service__WEBPACK_IMPORTED_MODULE_9__["fetchDailyRewardsPayload"])({
       page: 1,
-      count: this.historyPageSize
+      count: mineRequestCount
     }).then(function (_ref) {
       var mineResult = _ref[0],
         statusResult = _ref[1];
       if (mineResult.status === 'fulfilled') {
         var minePayload = _this2.normalizeMinePayload(mineResult.value);
         _this2.records = minePayload.records;
-        _this2.currentPage = minePayload.pagination.page;
-        _this2.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+        _this2.syncPaginationState(minePayload.pagination.total);
       } else if (!silent) {
         _this2.records = [];
         _this2.currentPage = 1;
@@ -999,8 +1015,7 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     }).then(function (response) {
       var minePayload = _this3.normalizeMinePayload(response);
       _this3.records = _this3.mergeUniqueRecords(_this3.records, minePayload.records);
-      _this3.currentPage = minePayload.pagination.page || nextPage;
-      _this3.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+      _this3.syncPaginationState(minePayload.pagination.total);
     })["catch"](function () {
       if (!_this3.records.length) {
         _this3.errorMessage = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.load_error');
@@ -1144,7 +1159,8 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
     }
     this.refreshing = true;
     this.loadRecords({
-      silent: true
+      silent: true,
+      preserveVisibleCount: true
     });
   };
   _proto.handleClaimAll = function handleClaimAll() {
@@ -1169,7 +1185,8 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       }
       _this6.showClaimModal(result.claimedTotal);
       return _this6.loadRecords({
-        silent: true
+        silent: true,
+        preserveVisibleCount: true
       });
     })["catch"](function () {})["finally"](function () {
       _this6.claimingAll = false;
@@ -1200,7 +1217,8 @@ var DailyRewards = /*#__PURE__*/function (_Page) {
       }
       _this7.showClaimModal(result.claimedTotal);
       return _this7.loadRecords({
-        silent: true
+        silent: true,
+        preserveVisibleCount: true
       });
     })["catch"](function () {})["finally"](function () {
       delete _this7.claimingRecordKeys[key];

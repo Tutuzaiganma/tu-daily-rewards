@@ -9,7 +9,7 @@ import ClaimModel from './ClaimModel';
 import { fetchDailyRewardsPayload, fetchDailyRewardsMine, claimDailyRewardSingle, claimDailyRewardAll } from './service';
 
 const REWARD_TYPES = ['post', 'reply', 'view'];
-const HISTORY_PAGE_SIZE = 20;
+const HISTORY_PAGE_SIZE = 2;
 
 export default class DailyRewards extends Page {
   oninit(vnode) {
@@ -109,8 +109,8 @@ export default class DailyRewards extends Page {
     const rows = Array.isArray(source.data) ? source.data : [];
     const pagination = source.pagination && typeof source.pagination === 'object' ? source.pagination : {};
     const page = Math.max(1, Math.floor(this.toSafeNumber(pagination.page || 1)));
-    const count = Math.floor(this.toSafeNumber(pagination.count || this.historyPageSize));
-    const total = Math.floor(this.toSafeNumber(pagination.total));
+    const count = Math.floor(this.toSafeNumber(pagination.count || rows.length || this.historyPageSize));
+    const total = Math.max(rows.length, Math.floor(this.toSafeNumber(pagination.total)));
     const fallbackHasMore = count > 0 && page * count < total;
 
     return {
@@ -122,6 +122,24 @@ export default class DailyRewards extends Page {
         hasMore: typeof pagination.hasMore === 'boolean' ? pagination.hasMore : fallbackHasMore,
       },
     };
+  }
+
+  getMineRequestCount(options = {}) {
+    if (!options.preserveVisibleCount) {
+      return this.historyPageSize;
+    }
+
+    const visibleCount = Array.isArray(this.records) ? this.records.length : 0;
+
+    return Math.max(this.historyPageSize, visibleCount);
+  }
+
+  syncPaginationState(total) {
+    const safeTotal = Math.max(0, Math.floor(this.toSafeNumber(total)));
+    const visibleCount = Array.isArray(this.records) ? this.records.length : 0;
+
+    this.currentPage = Math.max(1, Math.ceil(visibleCount / this.historyPageSize));
+    this.hasMoreRecords = safeTotal > visibleCount;
   }
 
   mergeUniqueRecords(existingRecords, incomingRecords) {
@@ -150,6 +168,7 @@ export default class DailyRewards extends Page {
 
   loadRecords(options = {}) {
     const silent = Boolean(options.silent);
+    const mineRequestCount = this.getMineRequestCount(options);
 
     if (!silent) {
       this.loading = true;
@@ -157,13 +176,12 @@ export default class DailyRewards extends Page {
     }
     this.errorMessage = '';
 
-    return fetchDailyRewardsPayload({ page: 1, count: this.historyPageSize })
+    return fetchDailyRewardsPayload({ page: 1, count: mineRequestCount })
       .then(([mineResult, statusResult]) => {
         if (mineResult.status === 'fulfilled') {
           const minePayload = this.normalizeMinePayload(mineResult.value);
           this.records = minePayload.records;
-          this.currentPage = minePayload.pagination.page;
-          this.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+          this.syncPaginationState(minePayload.pagination.total);
         } else if (!silent) {
           this.records = [];
           this.currentPage = 1;
@@ -209,8 +227,7 @@ export default class DailyRewards extends Page {
       .then((response) => {
         const minePayload = this.normalizeMinePayload(response);
         this.records = this.mergeUniqueRecords(this.records, minePayload.records);
-        this.currentPage = minePayload.pagination.page || nextPage;
-        this.hasMoreRecords = Boolean(minePayload.pagination.hasMore);
+        this.syncPaginationState(minePayload.pagination.total);
       })
       .catch(() => {
         if (!this.records.length) {
@@ -376,7 +393,7 @@ export default class DailyRewards extends Page {
     }
 
     this.refreshing = true;
-    this.loadRecords({ silent: true });
+    this.loadRecords({ silent: true, preserveVisibleCount: true });
   }
 
   handleClaimAll() {
@@ -403,7 +420,7 @@ export default class DailyRewards extends Page {
 
         this.showClaimModal(result.claimedTotal);
 
-        return this.loadRecords({ silent: true });
+        return this.loadRecords({ silent: true, preserveVisibleCount: true });
       })
       .catch(() => {})
       .finally(() => {
@@ -442,7 +459,7 @@ export default class DailyRewards extends Page {
 
         this.showClaimModal(result.claimedTotal);
 
-        return this.loadRecords({ silent: true });
+        return this.loadRecords({ silent: true, preserveVisibleCount: true });
       })
       .catch(() => {})
       .finally(() => {
