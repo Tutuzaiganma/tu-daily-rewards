@@ -1421,8 +1421,30 @@ var PendingRewardNotification = /*#__PURE__*/function (_Notification) {
     return flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.route('dailyRewards');
   };
   _proto.content = function content() {
-    // 后端会复用同一条通知并重置为未读，这里保持固定提示文案。
-    return flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.notifications.pending_reward_text');
+    var notification = this.attrs.notification;
+    var payload = notification ? notification.content() : null;
+    var pendingTotal = this.toSafeNumber(payload && payload.pendingTotal);
+    var currencyName = this.getCurrencyName(payload);
+    return flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.notifications.pending_reward_text', {
+      total: pendingTotal,
+      currencyName: currencyName
+    });
+  };
+  _proto.toSafeNumber = function toSafeNumber(value) {
+    var parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return 0;
+    }
+    return Math.floor(parsed);
+  };
+  _proto.getCurrencyName = function getCurrencyName(payload) {
+    var payloadValue = payload && typeof payload.currencyName === 'string' ? payload.currencyName.trim() : '';
+    if (payloadValue) {
+      return payloadValue;
+    }
+    var forumValue = flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.forum ? flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.forum.attribute('tu-daily-rewards.currencyName') : '';
+    var normalizedForumValue = typeof forumValue === 'string' ? forumValue.trim() : '';
+    return normalizedForumValue || flarum_forum_app__WEBPACK_IMPORTED_MODULE_1___default.a.translator.trans('tu-daily-rewards.forum.page.claim_modal_currency_placeholder');
   };
   return PendingRewardNotification;
 }(flarum_forum_components_Notification__WEBPACK_IMPORTED_MODULE_2___default.a);

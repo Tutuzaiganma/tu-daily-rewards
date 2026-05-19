@@ -35,7 +35,6 @@ return [
         ->listen(Started::class, [Listener\DiscussionCreated::class, 'handleStarted'])
         ->listen(PostWasApproved::class, [Listener\DiscussionCreated::class, 'handleApproved'])
         ->listen(Posted::class, [Listener\PostCreated::class, 'handlePosted'])
-        ->listen(PostWasApproved::class, [Listener\PostCreated::class, 'handleApproved'])
         ->listen(UserDataSaving::class, [Listener\ViewPost::class, 'handleUserDataSaving'])
         ->listen(UserRead::class, [Listener\ViewPost::class, 'handle']),
 ];

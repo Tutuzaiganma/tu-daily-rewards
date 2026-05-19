@@ -3,7 +3,6 @@
 namespace Tu\DailyRewards\Listener;
 
 use Carbon\CarbonImmutable;
-use Flarum\Approval\Event\PostWasApproved;
 use Flarum\Post\Event\Posted;
 use Flarum\Post\Post;
 use Flarum\User\User;
@@ -36,25 +35,16 @@ class PostCreated
     }
 
     /**
-     * 监听回帖创建事件：仅当回帖已通过审核时写入回帖奖励记录。
+     * 监听回帖创建事件：仅当回帖及所属主题均已通过审核时写入回帖奖励记录。
      */
     public function handlePosted(Posted $event): void
     {
         $post = $event->post;
-        if (!$this->isEligibleReply($post) || !$this->isPostApproved($post)) {
-            return;
-        }
-
-        $this->handleReplyReward($post);
-    }
-
-    /**
-     * 监听回帖审核通过事件：用于补记审核前未记录的回帖奖励。
-     */
-    public function handleApproved(PostWasApproved $event): void
-    {
-        $post = $event->post;
-        if (!$this->isEligibleReply($post)) {
+        if (
+            !$this->isEligibleReply($post)
+            || !$this->isPostApproved($post)
+            || !$this->isDiscussionApproved($post)
+        ) {
             return;
         }
 
@@ -229,6 +219,25 @@ class PostCreated
     protected function isPostApproved(Post $post): bool
     {
         if (isset($post->is_approved) && !$post->is_approved) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function isDiscussionApproved(Post $post): bool
+    {
+        $discussion = $post->discussion;
+        if (!$discussion) {
+            return false;
+        }
+
+        if (isset($discussion->is_approved) && !$discussion->is_approved) {
+            return false;
+        }
+
+        $firstPost = $discussion->firstPost;
+        if ($firstPost && isset($firstPost->is_approved) && !$firstPost->is_approved) {
             return false;
         }
 

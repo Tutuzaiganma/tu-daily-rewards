@@ -11,7 +11,35 @@ export default class PendingRewardNotification extends Notification {
   }
 
   content() {
-    // 后端会复用同一条通知并重置为未读，这里保持固定提示文案。
-    return app.translator.trans('tu-daily-rewards.forum.notifications.pending_reward_text');
+    const notification = this.attrs.notification;
+    const payload = notification ? notification.content() : null;
+    const pendingTotal = this.toSafeNumber(payload && payload.pendingTotal);
+    const currencyName = this.getCurrencyName(payload);
+
+    return app.translator.trans('tu-daily-rewards.forum.notifications.pending_reward_text', {
+      total: pendingTotal,
+      currencyName,
+    });
+  }
+
+  toSafeNumber(value) {
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      return 0;
+    }
+
+    return Math.floor(parsed);
+  }
+
+  getCurrencyName(payload) {
+    const payloadValue = payload && typeof payload.currencyName === 'string' ? payload.currencyName.trim() : '';
+    if (payloadValue) {
+      return payloadValue;
+    }
+
+    const forumValue = app.forum ? app.forum.attribute('tu-daily-rewards.currencyName') : '';
+    const normalizedForumValue = typeof forumValue === 'string' ? forumValue.trim() : '';
+
+    return normalizedForumValue || app.translator.trans('tu-daily-rewards.forum.page.claim_modal_currency_placeholder');
   }
 }

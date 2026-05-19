@@ -73,4 +73,4 @@ tu-daily-rewards:
       claim_modal_currency_placeholder: 货币名称
       unknown_type: 未知类别
     notifications:
-      pending_reward_text: 你有新的活跃奖励待领取！
+      pending_reward_text: 你有新的活跃奖励待领取！总计 {total} {currencyName}！
